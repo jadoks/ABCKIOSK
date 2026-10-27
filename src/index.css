@@ -1,0 +1,57 @@
+@import "tailwindcss";
+
+@theme {
+  --color-ink: #0e131b;
+  --color-panel: #1a202b;
+  --color-panel-2: #151a23;
+  --color-key: #232936;
+  --color-brand: #44d4f7;
+  --color-mint: #3fd6b4;
+  --color-soft: #e9e9f4;
+  --color-muted: #c9ccd8;
+  --color-amber: #ffb454;
+  --color-danger: #4a0d16;
+  --color-danger-icon: #a30f1c;
+  --color-verified: #1b5d58;
+
+  --font-display: "Space Grotesk", system-ui, sans-serif;
+  --font-body: "Urbanist", system-ui, sans-serif;
+
+  --animate-glow: glow 2.6s ease-in-out infinite;
+  @keyframes glow {
+    0%, 100% { box-shadow: 0 0 30px rgba(68, 212, 247, 0.35); }
+    50%      { box-shadow: 0 0 55px rgba(68, 212, 247, 0.65); }
+  }
+
+  --animate-blink: blink 1s steps(1) infinite;
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50%      { opacity: 0; }
+  }
+}
+
+html, body, #root { height: 100%; }
+body {
+  margin: 0;
+  background: var(--color-ink);
+  font-family: var(--font-display);
+  user-select: none;
+  touch-action: pan-x pan-y; /* kiosk: no pinch / double-tap zoom, taps fire instantly */
+  -webkit-tap-highlight-color: transparent;
+  overflow: hidden;
+}
+
+/* Claim slip: invisible on the kiosk screen, the only thing printed by window.print() */
+.claim-slip { display: none; }
+@media print {
+  html, body, #root { height: auto; overflow: visible; background: #fff; }
+  main { display: none !important; }
+  .claim-slip { display: block; width: 72mm; margin: 0 auto; padding: 4mm 0; color: #000; background: #fff; font: 12px/1.35 ui-monospace, Menlo, Consolas, monospace; }
+  .claim-slip h1 { margin: 0; text-align: center; font-size: 18px; letter-spacing: 0.1em; }
+  .claim-slip p { margin: 2px 0; }
+  .claim-slip .c { text-align: center; }
+  .claim-slip .big { text-align: center; font-size: 34px; font-weight: 700; margin: 4px 0; }
+  .claim-slip .row { display: flex; justify-content: space-between; gap: 8px; }
+  .claim-slip .b { font-weight: 700; }
+  .claim-slip hr { border: 0; border-top: 1px dashed #000; margin: 6px 0; }
+}

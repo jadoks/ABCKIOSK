@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" role="img" aria-label="tuna melt panini">
+<defs>
+  <radialGradient id="bg" cx="50%" cy="45%" r="75%"><stop offset="0" stop-color="#2a3646"/><stop offset="1" stop-color="#0f1520"/></radialGradient>
+  <radialGradient id="glow" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#ffc107" stop-opacity=".35"/><stop offset="1" stop-color="#ffc107" stop-opacity="0"/></radialGradient>
+</defs>
+<rect width="800" height="600" fill="url(#bg)"/><ellipse cx="400" cy="330" rx="380" ry="260" fill="url(#glow)"/>
+  <ellipse cx="410" cy="370" rx="230" ry="96.6" fill="#000" opacity=".35"/>
+  <ellipse cx="400" cy="330" rx="230" ry="126.50000000000001" fill="#e8ebf0"/>
+  <ellipse cx="400" cy="324" rx="188.6" ry="98.89999999999999" fill="#d3d8e0"/>
+    <g transform="rotate(-8 330 330)"><rect x="220" y="270" width="240" height="110" rx="16" fill="#c98f4a"/><rect x="228" y="276" width="224" height="96" rx="12" fill="#efc88a"/><rect x="230" y="318" width="220" height="22" fill="#ffc83d"/><rect x="236" y="340" width="208" height="16" fill="#d9c9b0"/>
+    <path d="M222 330 q30 12 60 0 t60 0 t60 0 t50 0" stroke="#8a5a22" stroke-width="5" fill="none"/></g>
+    <g transform="rotate(14 520 340)"><rect x="430" y="290" width="200" height="100" rx="16" fill="#c98f4a"/><rect x="438" y="296" width="184" height="86" rx="12" fill="#efc88a"/><rect x="440" y="336" width="180" height="20" fill="#ffc83d"/></g>
+    <ellipse cx="570" cy="410" rx="55" ry="22" fill="#cfd5de"/><circle cx="578.9" cy="404.0" r="6" fill="#d9c9b0"/><circle cx="558.6" cy="407.1" r="9" fill="#bfae92"/><circle cx="571.7" cy="398.0" r="8" fill="#d9c9b0"/><circle cx="584.5" cy="409.6" r="7" fill="#bfae92"/><circle cx="543.6" cy="402.6" r="6" fill="#d9c9b0"/><circle cx="595.0" cy="399.2" r="9" fill="#bfae92"/><circle cx="561.8" cy="413.4" r="8" fill="#d9c9b0"/><circle cx="553.8" cy="394.8" r="7" fill="#bfae92"/><circle cx="604.7" cy="407.7" r="6" fill="#d9c9b0"/><circle cx="534.1" cy="408.6" r="9" fill="#bfae92"/></svg>

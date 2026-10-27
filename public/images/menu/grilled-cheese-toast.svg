@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" role="img" aria-label="grilled cheese toast">
+<defs>
+  <radialGradient id="bg" cx="50%" cy="45%" r="75%"><stop offset="0" stop-color="#2a3646"/><stop offset="1" stop-color="#0f1520"/></radialGradient>
+  <radialGradient id="glow" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#ffca28" stop-opacity=".35"/><stop offset="1" stop-color="#ffca28" stop-opacity="0"/></radialGradient>
+</defs>
+<rect width="800" height="600" fill="url(#bg)"/><ellipse cx="400" cy="330" rx="380" ry="260" fill="url(#glow)"/>
+  <ellipse cx="410" cy="370" rx="230" ry="96.6" fill="#000" opacity=".35"/>
+  <ellipse cx="400" cy="330" rx="230" ry="126.50000000000001" fill="#e8ebf0"/>
+  <ellipse cx="400" cy="324" rx="188.6" ry="98.89999999999999" fill="#d3d8e0"/><rect x="250" y="290" width="200" height="130" rx="16" fill="#c98f4a"/><rect x="258" y="296" width="184" height="116" rx="12" fill="#efc88a"/><rect x="370" y="250" width="210" height="130" rx="16" fill="#c98f4a"/><rect x="378" y="256" width="194" height="116" rx="12" fill="#efc88a"/>
+    <path d="M370 330 q10 60 26 70 q8 -36 20 -52 q20 40 28 40 q6 -20 4 -60 z" fill="#ffc83d"/>
+    <path d="M300 345 q-6 50 10 66 q10 -28 18 -40 z" fill="#ffd966"/>
+    <ellipse cx="560" cy="430" rx="46" ry="18" fill="#cfd5de"/><ellipse cx="560" cy="426" rx="34" ry="11" fill="#b5301f"/></svg>
