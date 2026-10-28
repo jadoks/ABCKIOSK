@@ -121,7 +121,16 @@ export default function ConfirmScreen({ order, student, onNewOrder, onDone }) {
                       <p className="text-[52px] font-bold leading-none text-mint">PAID</p>
                     </>
                   )}
-                  {order.paymentMethod === 'cash' && (
+                  {order.paymentMethod === 'cash' && order.paymentStatus === 'paid' && (
+                    <>
+                      <div>
+                        <p className="text-[24px] font-semibold">Payment Status:</p>
+                        <p className="font-body text-[18px] text-muted">Cash received {peso(order.tendered ?? order.total)}{order.change > 0 ? ` • Change ${peso(order.change)}` : ''}</p>
+                      </div>
+                      <p className="text-[52px] font-bold leading-none text-mint">PAID</p>
+                    </>
+                  )}
+                  {order.paymentMethod === 'cash' && order.paymentStatus !== 'paid' && (
                     <>
                       <div><p className="text-[24px] font-semibold">Payment Status:</p><p className="font-body text-[18px] text-muted">Pay at the Express Counter before the hold ends</p></div>
                       <p className="text-[52px] font-bold leading-none text-amber">UNPAID</p>

@@ -8,10 +8,11 @@ import { ClockIcon, LogoutIcon, UserCircleIcon } from './icons.jsx'
 /* Logged-in student, auto-lock countdown and Log Out. Reusable on every post-login screen. */
 /* Pass `cart` ({ [itemId]: qty }) on ordering screens to get the "Are you still ordering?" warning before auto-logout;
    without it (e.g. the confirmation screen) the student is logged out straight after the idle time. */
+/* idlePaused keeps the session alive while a QR / cash payment is waiting on the hardware or the phone. */
 /* Right-hand button defaults to Log Out; the cart passes actionLabel="Back to Menu". */
-export default function SessionBar({ student, cart, onLogOut, actionLabel = 'Log Out', onAction = onLogOut, ActionIcon = LogoutIcon }) {
+export default function SessionBar({ student, cart, onLogOut, actionLabel = 'Log Out', onAction = onLogOut, ActionIcon = LogoutIcon, idlePaused = false }) {
   const warn = cart ? IDLE_WARNING_SECONDS : 0
-  const { idleLeft: left, warning, warnLeft, stay } = useIdleWarning(AUTO_LOCK_SECONDS, warn, onLogOut)
+  const { idleLeft: left, warning, warnLeft, stay } = useIdleWarning(AUTO_LOCK_SECONDS, warn, onLogOut, idlePaused)
   const urgent = left <= 10
 
   const { count } = cart ? cartSummary(cart) : { count: 0 }

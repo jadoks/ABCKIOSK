@@ -7,6 +7,7 @@ import useDragScroll from '../hooks/useDragScroll.js'
 import { ArrowIcon, BagIcon, CATEGORY_ICONS, MedalIcon, SlidersIcon } from '../components/icons.jsx'
 import { CATEGORIES, ITEMS } from '../data/menu.js'
 import { cartSummary } from '../lib/cart.js'
+import { db } from '../lib/db.js'
 import { peso } from '../lib/format.js'
 
 const MAX_QTY = 9
@@ -33,7 +34,7 @@ function CategoryButton({ cat, count, active, onSelect }) {
   )
 }
 
-export default function MenuScreen({ student, cart, onCartChange, onLogOut, onCheckout }) {
+export default function MenuScreen({ student, cart, onCartChange, onLogOut, onCheckout, onOpenWallet }) {
   const [category, setCategory] = useState('all')
   const listRef = useDragScroll() // drag the item list with a finger or mouse
 
@@ -69,8 +70,19 @@ export default function MenuScreen({ student, cart, onCartChange, onLogOut, onCh
               <CategoryButton key={c.id} cat={c} count={ITEMS.length} active={category === c.id} onSelect={() => pickCategory(c.id)} />
             ))}
           </nav>
-          <div className="mt-auto flex h-[50px] items-center justify-center gap-2 rounded-[12px] border border-[#222a38] bg-[#121722] text-[16px] font-semibold text-amber">
-            <MedalIcon /> Meal Points Active
+          {/* Loyalty perks card */}
+          <div className="mt-[30px] rounded-[16px] border border-[#5a4620] bg-[#161c27] p-[18px]">
+            <p className="flex flex-wrap items-center gap-x-2 text-[13px] font-bold tracking-[0.04em] text-amber">
+              <MedalIcon /> LOYALTY PERKS <span className="text-[16px] font-semibold tracking-normal">Balance: {db.getPoints(student.id).toLocaleString()} Pts</span>
+            </p>
+            <p className="mt-3 font-body text-[17px] leading-5 text-muted">Convert points to meal discount slips instantly.</p>
+            <button
+              type="button"
+              onClick={onOpenWallet}
+              className="mt-4 flex h-[46px] w-full items-center justify-center gap-2 whitespace-nowrap rounded-[10px] bg-[#f59e0b] text-[15px] font-semibold text-[#3a2300] transition active:scale-[0.98]"
+            >
+              View Balance &amp; Rewards <ArrowIcon small />
+            </button>
           </div>
         </aside>
 

@@ -8,18 +8,20 @@ import { useCallback, useEffect, useRef, useState } from 'react'
  * (the modal's "I'm Still Here" button), so a stray tap behind the modal can't dismiss it.
  * Pass warnSeconds = 0 to skip the warning and expire straight after the idle time.
  */
-export default function useIdleWarning(idleSeconds, warnSeconds, onExpire) {
+export default function useIdleWarning(idleSeconds, warnSeconds, onExpire, paused = false) {
   const [idleLeft, setIdleLeft] = useState(idleSeconds)
   const [warnLeft, setWarnLeft] = useState(warnSeconds)
   const expire = useRef(onExpire)
   expire.current = onExpire
+  const pausedRef = useRef(paused) // true while the student is waiting on a QR / cash payment (no touching needed)
+  pausedRef.current = paused
 
   useEffect(() => {
     const reset = () => setIdleLeft((l) => (l > 0 ? idleSeconds : l)) // ignored once the warning is up
     window.addEventListener('pointerdown', reset)
     window.addEventListener('keydown', reset)
     const timer = setInterval(() => {
-      setIdleLeft((l) => (l > 0 ? l - 1 : l))
+      setIdleLeft((l) => (pausedRef.current ? idleSeconds : l > 0 ? l - 1 : l))
     }, 1000)
     return () => {
       window.removeEventListener('pointerdown', reset)

@@ -11,7 +11,8 @@
  * Every function is a thin wrapper, so later you can replace the bodies with fetch() calls
  * to your real API without touching the screens.
  */
-import { DEFAULT_WALLET_BALANCE } from './config.js'
+import { DEFAULT_POINTS, DEFAULT_WALLET_BALANCE, POINTS_PER_PESO } from './config.js'
+import { REWARDS } from './rewards.js'
 import { STUDENTS } from './students.js'
 
 const PERSIST = true
@@ -69,6 +70,37 @@ function saveWallets() {
   }
 }
 
+/* Meal Points: { [studentId]: points }. Students without a record start at DEFAULT_POINTS. */
+const POINTS_KEY = 'abc-kiosk-points'
+/* Wallet statement: [{ id, studentId, kind: 'topup' | 'order' | 'reward', method, amount (pesos, +/-), points (+/-), title, place, ref, at }] */
+const LEDGER_KEY = 'abc-kiosk-ledger'
+function loadJson(key, fallback) {
+  if (!PERSIST) return fallback
+  try {
+    return JSON.parse(localStorage.getItem(key)) ?? fallback
+  } catch {
+    return fallback
+  }
+}
+function saveJson(key, value) {
+  if (!PERSIST) return
+  try {
+    localStorage.setItem(key, JSON.stringify(value))
+  } catch {
+    /* storage unavailable: ignore */
+  }
+}
+let points = loadJson(POINTS_KEY, {})
+let ledger = loadJson(LEDGER_KEY, [])
+
+function addLedger(entry) {
+  const row = { id: `L${Date.now()}${ledger.length}`, at: new Date().toISOString(), ...entry }
+  ledger = [row, ...ledger]
+  saveJson(LEDGER_KEY, ledger)
+  return row
+}
+const randomRef = (prefix) => `${prefix}-${Math.floor(100000 + Math.random() * 900000)}`
+
 let accounts = load() // { [studentId]: { pin } }  (names are always read from the registrar)
 
 export const db = {
@@ -114,12 +146,48 @@ export const db = {
     return { ok: true, balance: balance - amount }
   },
 
-  /** Demo helper (cashier top-up). Returns the new balance. */
-  topUpWallet(studentId, amount) {
+  /**
+   * Adds money to the wallet and records it in the statement. Returns the new balance.
+   * `info` = { kind: 'topup', method: 'gcash' | 'cash', note?, ref? }
+   * DEMO ONLY: the real server credits the wallet only after the payment provider / cash validator confirms.
+   */
+  creditWallet(studentId, amount, info = {}) {
+    const { method = 'cash', note, ref } = info
     wallets = { ...wallets, [studentId]: db.getWalletBalance(studentId) + amount }
     saveWallets()
+    addLedger({
+      studentId, kind: 'topup', method, amount,
+      title: method === 'gcash' ? 'Wallet Top Up - GCash' : 'Wallet Top Up - Cash Kiosk',
+      place: note ?? (method === 'gcash' ? null : 'Terminal Cash Depository #02'),
+      ref: ref ?? (method === 'gcash' ? randomRef('#GC') : null),
+    })
     return wallets[studentId]
   },
+
+  /** Kept for older callers: plain top-up without a statement note. */
+  topUpWallet: (studentId, amount) => db.creditWallet(studentId, amount, { method: 'cash' }),
+
+  /** Current Meal Points. */
+  getPoints: (studentId) => points[studentId] ?? DEFAULT_POINTS,
+
+  /**
+   * Spends points on a perk. -> { ok: true, points, code, reward } | { ok: false, reason: 'unknown' | 'insufficient', points }
+   * DEMO ONLY: the real server validates and issues the voucher code.
+   */
+  redeemReward(studentId, rewardId) {
+    const reward = REWARDS.find((r) => r.id === rewardId)
+    const have = db.getPoints(studentId)
+    if (!reward) return { ok: false, reason: 'unknown', points: have }
+    if (reward.cost > have) return { ok: false, reason: 'insufficient', points: have }
+    points = { ...points, [studentId]: have - reward.cost }
+    saveJson(POINTS_KEY, points)
+    const code = randomRef('RW')
+    addLedger({ studentId, kind: 'reward', method: 'points', amount: 0, points: -reward.cost, title: `Reward Redeemed: ${reward.title}`, place: 'Show this code at the counter', ref: code })
+    return { ok: true, points: have - reward.cost, code, reward }
+  },
+
+  /** Wallet statement for one student, newest first. */
+  transactions: (studentId) => ledger.filter((t) => t.studentId === studentId),
 
   /**
    * Saves a new order and returns it. Numbers run ABC-001, ABC-002, ...
@@ -138,6 +206,21 @@ export const db = {
       placedAt: new Date().toISOString(),
     }
     orders = [...orders, order]
+    if (extra.paymentStatus === 'paid') {
+      const earned = Math.floor(total * POINTS_PER_PESO)
+      points = { ...points, [studentId]: db.getPoints(studentId) + earned }
+      saveJson(POINTS_KEY, points)
+      order.pointsEarned = earned
+    }
+    if (extra.paymentMethod === 'wallet') {
+      const names = lines.slice(0, 2).map(({ item }) => item.name.split(/\s+/).slice(0, 2).join(' '))
+      addLedger({
+        studentId, kind: 'order', method: 'wallet', amount: -total, points: order.pointsEarned ?? 0,
+        title: `Pre-Order: ${names.join(' & ')}${lines.length > 2 ? ` +${lines.length - 2} more` : ''}`,
+        place: `${number} • ${extra.serviceType === 'take-out' ? 'Kiosk Pickup' : 'Dine In'}`,
+        ref: number,
+      })
+    }
     if (PERSIST) {
       try {
         localStorage.setItem(ORDERS_KEY, JSON.stringify(orders))

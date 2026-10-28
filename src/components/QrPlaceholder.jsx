@@ -28,11 +28,16 @@ function matrix(seed) {
   return cells
 }
 
-export default function QrPlaceholder({ seed = 'abc', className = 'h-[170px] w-[170px]' }) {
-  const cells = matrix(seed)
+/* `children` is drawn in the centre (e.g. the QR Ph logo badge); the modules behind it are cleared. */
+export default function QrPlaceholder({ seed = 'abc', className = 'h-[170px] w-[170px]', children }) {
+  const hole = (r, c) => children && r >= 9 && r <= 15 && c >= 9 && c <= 15
+  const cells = matrix(seed).filter(([r, c]) => !hole(r, c))
   return (
-    <svg viewBox={`-2 -2 ${N + 4} ${N + 4}`} className={`${className} rounded-[12px] bg-white`} role="img" aria-label="QR Ph code (demo)" shapeRendering="crispEdges">
-      {cells.map(([r, c]) => <rect key={`${r}-${c}`} x={c} y={r} width="1" height="1" fill="#0e131b" />)}
-    </svg>
+    <div className={`relative ${className}`}>
+      <svg viewBox={`-2 -2 ${N + 4} ${N + 4}`} className="h-full w-full rounded-[12px] bg-white" role="img" aria-label="QR Ph code (demo)" shapeRendering="crispEdges">
+        {cells.map(([r, c]) => <rect key={`${r}-${c}`} x={c} y={r} width="1" height="1" fill="#0e131b" />)}
+      </svg>
+      {children && <div className="absolute inset-0 grid place-items-center">{children}</div>}
+    </div>
   )
 }

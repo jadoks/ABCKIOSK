@@ -44,6 +44,102 @@
     {
       "file": "fruity-iced-tea",
       "prompt": "Tall glass of iced black tea with orange, lemon and berry slices, mint garnish, ice cubes"
+    },
+    {
+      "file": "chicken-adobo-rice-bowl",
+      "prompt": "Bowl of steamed white rice topped with glossy soy-vinegar braised chicken adobo pieces, a halved boiled egg and bay leaf"
+    },
+    {
+      "file": "pork-bbq-rice-meal",
+      "prompt": "Two grilled Filipino pork BBQ skewers glazed sweet and smoky on a plate with white rice and a small side of atchara pickled papaya"
+    },
+    {
+      "file": "chicken-inasal-rice",
+      "prompt": "Grilled chicken inasal leg quarter, orange annatto glaze with char marks, served with garlic rice, calamansi halves and dipping sauce"
+    },
+    {
+      "file": "longganisa-egg-silog",
+      "prompt": "Plate of garlic fried rice with sweet Filipino longganisa sausages and a sunny-side-up egg, sliced tomato on the side"
+    },
+    {
+      "file": "filipino-style-spaghetti",
+      "prompt": "Filipino sweet-style spaghetti with red meaty sauce, sliced red hotdog pieces and grated cheddar cheese on top, fork twirled"
+    },
+    {
+      "file": "pancit-canton",
+      "prompt": "Stir-fried pancit canton egg noodles with chicken strips, cabbage, carrots and snap peas, a calamansi wedge on the side"
+    },
+    {
+      "file": "creamy-carbonara",
+      "prompt": "Creamy fettuccine carbonara with crispy bacon bits, parmesan shavings and cracked black pepper in a white bowl"
+    },
+    {
+      "file": "beef-ramen-bowl",
+      "prompt": "Steaming ramen bowl with tender sliced beef, soft-boiled egg half, spring onions, corn and nori in rich brown broth"
+    },
+    {
+      "file": "classic-cheeseburger",
+      "prompt": "Classic cheeseburger with melted cheese, beef patty, pickles, lettuce and tomato in a sesame bun, side of fries blurred behind"
+    },
+    {
+      "file": "crispy-chicken-burger",
+      "prompt": "Crispy fried chicken burger with lettuce, mayo and a toasted bun, cut to show the juicy crunchy fillet"
+    },
+    {
+      "file": "ham-egg-sandwich",
+      "prompt": "Toasted ham and scrambled egg sandwich cut diagonally on a small plate, soft bread, melted cheese peeking out"
+    },
+    {
+      "file": "crinkle-cut-fries",
+      "prompt": "Basket of golden crinkle-cut french fries lightly salted with a small bowl of ketchup"
+    },
+    {
+      "file": "chicken-nuggets",
+      "prompt": "Six golden crispy chicken nuggets on a small tray with a bowl of sweet chili dipping sauce"
+    },
+    {
+      "file": "pork-siomai",
+      "prompt": "Four steamed pork siomai dumplings in a bamboo steamer with soy sauce, calamansi and chili garlic dip"
+    },
+    {
+      "file": "lumpia-shanghai",
+      "prompt": "Six crispy golden lumpia Shanghai spring rolls stacked on a plate with sweet chili dipping sauce"
+    },
+    {
+      "file": "cheese-sticks",
+      "prompt": "Five crispy golden cheese sticks with melted cheese stretching from one broken piece, ketchup dip beside"
+    },
+    {
+      "file": "brown-sugar-milk-tea",
+      "prompt": "Tall clear cup of brown sugar milk tea with tapioca pearls and caramel-like tiger stripes on the glass, with straw"
+    },
+    {
+      "file": "mango-shake",
+      "prompt": "Tall glass of thick golden mango shake garnished with fresh mango slices and a straw, blurred cafe background"
+    },
+    {
+      "file": "calamansi-juice",
+      "prompt": "Glass of fresh calamansi juice over ice with halved calamansi fruits and mint on a wooden surface"
+    },
+    {
+      "file": "iced-chocolate",
+      "prompt": "Tall glass of iced chocolate with swirls of cold milk and dark cocoa, ice cubes and a straw, condensation on the glass"
+    },
+    {
+      "file": "leche-flan",
+      "prompt": "Slice of silky leche flan custard with glossy caramel sauce dripping down on a small plate"
+    },
+    {
+      "file": "halo-halo",
+      "prompt": "Tall glass of halo-halo with shaved ice, ube ice cream, leche flan, sweet beans, jelly and evaporated milk, long spoon"
+    },
+    {
+      "file": "chocolate-fudge-brownie",
+      "prompt": "Fudgy chocolate brownie square with a crackly top and a bite taken out, dusting of cocoa on a dark plate"
+    },
+    {
+      "file": "banana-turon",
+      "prompt": "Two crispy caramelized banana turon rolls cut diagonally showing saba banana and jackfruit filling, sugar glaze"
     }
   ]
 }

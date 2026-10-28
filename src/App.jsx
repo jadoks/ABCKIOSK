@@ -6,12 +6,16 @@ import MenuScreen from './screens/MenuScreen.jsx'
 import CartScreen from './screens/CartScreen.jsx'
 import PaymentScreen from './screens/PaymentScreen.jsx'
 import ConfirmScreen from './screens/ConfirmScreen.jsx'
+import WalletScreen from './screens/WalletScreen.jsx'
+import TopUpScreen from './screens/TopUpScreen.jsx'
+import TransactionsScreen from './screens/TransactionsScreen.jsx'
 import { cartSummary, orderTotals, readyMinutes } from './lib/cart.js'
 import { db } from './lib/db.js'
 import { preloadMenuImages } from './lib/preload.js'
 
 export default function App() {
   // welcome -> login <-> register -> menu <-> cart (dine in / take out) -> payment -> confirm
+  // menu <-> wallet (balance & rewards) <-> topup | history
   const [screen, setScreen] = useState('welcome')
   const [student, setStudent] = useState(null) // { id, name } once logged in
   const [cart, setCart] = useState({}) // { [itemId]: quantity }
@@ -47,7 +51,7 @@ export default function App() {
 
   // Payment -> Confirm: charge (wallet only), save the order, show the receipt.
   // Returns { ok: false, reason } so the payment screen can show an error and stay put.
-  const payOrder = (method, ticket) => {
+  const payOrder = (method, ticket, cash) => {
     const { lines } = cartSummary(cart)
     if (!lines.length) return { ok: false, reason: 'empty-cart' }
     const { subtotal, ecoFee, serviceFee, total } = orderTotals(lines)
@@ -61,8 +65,9 @@ export default function App() {
 
     setOrder(db.placeOrder(student.id, lines, total, readyMinutes(lines), {
       subtotal, ecoFee, serviceFee, serviceType,
-      paymentMethod: method, // 'wallet' | 'gcash' | 'cash'
-      paymentStatus: method === 'cash' ? 'unpaid' : 'paid',
+      paymentMethod: method, // 'wallet' | 'gcash' | 'cash' (cash = hardware bill acceptor / coin hopper)
+      paymentStatus: 'paid',
+      ...(method === 'cash' && cash ? { tendered: cash.tendered, change: cash.change } : {}),
       authCode: `${ticket?.slice(2) ?? String(Math.floor(1000 + Math.random() * 9000))}-TX`,
       balanceAfter,
     }))
@@ -86,6 +91,7 @@ export default function App() {
           onCartChange={setCart}
           onLogOut={logOut}
           onCheckout={() => setScreen('cart')}
+          onOpenWallet={() => setScreen('wallet')}
         />
       )
     case 'cart':
@@ -112,6 +118,29 @@ export default function App() {
           onPay={payOrder}
         />
       )
+    case 'wallet':
+      return (
+        <WalletScreen
+          student={student}
+          cart={cart}
+          onLogOut={logOut}
+          onBack={() => setScreen('menu')}
+          onTopUp={() => setScreen('topup')}
+          onHistory={() => setScreen('history')}
+        />
+      )
+    case 'topup':
+      return (
+        <TopUpScreen
+          student={student}
+          cart={cart}
+          onLogOut={logOut}
+          onBackToMenu={() => setScreen('menu')}
+          onBackToWallet={() => setScreen('wallet')}
+        />
+      )
+    case 'history':
+      return <TransactionsScreen student={student} cart={cart} onLogOut={logOut} onBack={() => setScreen('wallet')} />
     case 'confirm':
       return <ConfirmScreen order={order} student={student} onNewOrder={startNewOrder} onDone={logOut} />
     default:

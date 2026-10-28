@@ -1,4 +1,4 @@
-export const peso = (n) => `₱${n.toFixed(2)}`
+export const peso = (n) => `₱${n.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 
 export const mmss = (total) => {
   const s = Math.max(0, total)

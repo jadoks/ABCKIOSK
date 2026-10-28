@@ -24,8 +24,11 @@ export function NfcIcon() {
   )
 }
 
-/* Placeholder logo: swap for <img src={logo} /> exported from Figma */
-export function Logo({ className = '' }) {
+/* ABC Kiosk logo: public/images/logo.png (replace that file to change the logo everywhere).
+   Falls back to the built-in vector logo if the PNG is missing. */
+const LOGO_SRC = `${import.meta.env.BASE_URL}images/logo.png`
+
+function FallbackLogo({ className }) {
   return (
     <svg viewBox="0 0 120 120" className={className} role="img" aria-label="ABC Kiosk logo">
       <rect width="120" height="120" fill="#44D4F7" />
@@ -36,6 +39,14 @@ export function Logo({ className = '' }) {
       <text x="60" y="76" textAnchor="middle" fontFamily="Space Grotesk" fontWeight="700" fontSize="16" fill="#fff">ABC KIOSK</text>
       <text x="60" y="86" textAnchor="middle" fontFamily="Space Grotesk" fontSize="4" letterSpacing="0.6" fill="#44D4F7">CAMPUS DINING EXPRESS</text>
     </svg>
+  )
+}
+
+export function Logo({ className = '' }) {
+  const [failed, setFailed] = useState(false)
+  if (failed) return <FallbackLogo className={className} />
+  return (
+    <img src={LOGO_SRC} alt="ABC Kiosk logo" className={`${className} object-cover`} draggable="false" onError={() => setFailed(true)} />
   )
 }
 

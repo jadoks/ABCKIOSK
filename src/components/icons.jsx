@@ -32,8 +32,8 @@ export const CheckIcon = ({ className = 'h-4 w-4', fill = '#3fd6b4', tick = '#0e
     <path d="m7 12.5 3.2 3.2L17 9" fill="none" stroke={tick} strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 )
-export const ArrowIcon = () => (
-  <svg viewBox="0 0 24 24" className="h-6 w-6" {...stroke} strokeWidth={2.6} aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+export const ArrowIcon = ({ small = false }) => (
+  <svg viewBox="0 0 24 24" className={small ? 'h-5 w-5' : 'h-6 w-6'} {...stroke} strokeWidth={2.6} aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
 )
 export const ArrowLeftIcon = () => (
   <svg viewBox="0 0 24 24" className="h-6 w-6" {...stroke} strokeWidth={2.6} aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6" /></svg>
@@ -174,4 +174,81 @@ export const TrashIcon = ({ className = 'h-6 w-6' }) => (
     <path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3" />
   </svg>
 )
-export const CATEGORY_ICONS = { grid: GridIcon, rice: RiceIcon, sandwich: SandwichIcon, cup: CupIcon }
+export const NoodleIcon = ({ className = 'h-7 w-7' }) => (
+  <svg viewBox="0 0 24 24" className={className} {...stroke} aria-hidden="true">
+    <path d="M3 13h18a9 9 0 0 1-18 0Z" /><path d="M8 13c0-2.500 2-2.500 2-5M13 13c0-2.500 2-2.500 2-5" /><path d="m14 3 6 7M17.500 2.500l4 5" />
+  </svg>
+)
+export const SnackIcon = ({ className = 'h-7 w-7' }) => (
+  <svg viewBox="0 0 24 24" className={className} {...stroke} aria-hidden="true">
+    <path d="M6 10h12l-1.500 11h-9L6 10Z" /><path d="M8.500 10V4.500M11.500 10V3M14.500 10V4.500M17 10V6" />
+  </svg>
+)
+export const DessertIcon = ({ className = 'h-7 w-7' }) => (
+  <svg viewBox="0 0 24 24" className={className} {...stroke} aria-hidden="true">
+    <path d="M7.500 11h9L12 21l-4.500-10Z" /><path d="M7 11a5 5 0 1 1 10 0" /><path d="M10 7.500h.01M13.500 8.500h.01" />
+  </svg>
+)
+export const CATEGORY_ICONS = { grid: GridIcon, rice: RiceIcon, noodle: NoodleIcon, sandwich: SandwichIcon, snack: SnackIcon, cup: CupIcon, dessert: DessertIcon }
+/* ---------- wallet / rewards / top-up icons ---------- */
+export const TopUpIcon = ({ className = 'h-6 w-6' }) => (
+  <svg viewBox="0 0 24 24" className={className} {...stroke} aria-hidden="true">
+    <rect x="3" y="5" width="18" height="13" rx="2.5" /><path d="M3 10h18M17 15v6M14 18h6" />
+  </svg>
+)
+export const ReceiptIcon = ({ className = 'h-6 w-6' }) => (
+  <svg viewBox="0 0 24 24" className={className} {...stroke} aria-hidden="true">
+    <path d="M6 3h12v18l-3-2-3 2-3-2-3 2V3Z" /><path d="M9 8h6M9 12h6" />
+  </svg>
+)
+export const GiftIcon = ({ className = 'h-5 w-5' }) => (
+  <svg viewBox="0 0 24 24" className={className} {...stroke} aria-hidden="true">
+    <rect x="3" y="8" width="18" height="4" rx="1" /><path d="M5 12v8h14v-8M12 8v12M12 8c-2.500 0-4-1-4-2.500S9.500 3 11 4.500L12 8Zm0 0c2.500 0 4-1 4-2.500S14.500 3 13 4.500L12 8Z" />
+  </svg>
+)
+export const TrophyIcon = ({ className = 'h-4 w-4' }) => (
+  <svg viewBox="0 0 24 24" className={className} {...stroke} aria-hidden="true">
+    <path d="M8 4h8v6a4 4 0 0 1-8 0V4ZM8 6H4v1a3 3 0 0 0 4 3M16 6h4v1a3 3 0 0 1-4 3M12 14v4M8 21h8M10 18h4" />
+  </svg>
+)
+export const LeafIcon = ({ className = 'h-7 w-7' }) => (
+  <svg viewBox="0 0 24 24" className={className} {...stroke} aria-hidden="true">
+    <path d="M5 19c0-8 5-14 15-14 0 10-6 15-14 15" /><path d="M5 19c3-5 6-8 10-10" />
+  </svg>
+)
+export const TicketIcon = ({ className = 'h-7 w-7' }) => (
+  <svg viewBox="0 0 24 24" className={className} {...stroke} aria-hidden="true">
+    <path d="M3 8a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-4V8Z" /><path d="M10 10h4M10 14h4" />
+  </svg>
+)
+export const PencilIcon = ({ className = 'h-5 w-5' }) => (
+  <svg viewBox="0 0 24 24" className={className} {...stroke} aria-hidden="true">
+    <path d="M4 20h4L19 9l-4-4L4 16v4ZM13.500 6.500l4 4" />
+  </svg>
+)
+export const ArrowDownIcon = ({ className = 'h-5 w-5' }) => (
+  <svg viewBox="0 0 24 24" className={className} {...stroke} strokeWidth={2.4} aria-hidden="true"><path d="M12 5v14M6 13l6 6 6-6" /></svg>
+)
+export const TimerIcon = ({ className = 'h-4 w-4' }) => (
+  <svg viewBox="0 0 24 24" className={className} {...stroke} aria-hidden="true">
+    <circle cx="12" cy="13" r="8" /><path d="M12 9v4l2 2M9 3h6" />
+  </svg>
+)
+export const XIcon = ({ className = 'h-5 w-5' }) => (
+  <svg viewBox="0 0 24 24" className={className} {...stroke} strokeWidth={2.6} aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" /></svg>
+)
+export const CoinIcon = ({ className = 'h-6 w-6' }) => (
+  <svg viewBox="0 0 24 24" className={className} {...stroke} aria-hidden="true">
+    <circle cx="12" cy="12" r="9" /><path d="M14.500 9.200c-.5-.8-1.400-1.200-2.500-1.200-1.500 0-2.500.8-2.500 2s1 1.700 2.500 2 2.500.8 2.500 2-1 2-2.500 2c-1.100 0-2-.4-2.500-1.200M12 6.500V8M12 16v1.500" />
+  </svg>
+)
+export const SpinnerIcon = ({ className = 'h-5 w-5' }) => (
+  <svg viewBox="0 0 24 24" className={`${className} animate-spin`} {...stroke} aria-hidden="true"><path d="M21 12a9 9 0 1 1-6.200-8.600" /></svg>
+)
+export const ShieldDotIcon = ({ className = 'h-4 w-4' }) => (
+  <svg viewBox="0 0 24 24" className={className} aria-hidden="true">
+    <path d="M12 2 4 5.500v6c0 5 3.400 8.700 8 10.500 4.600-1.800 8-5.500 8-10.500v-6L12 2Z" fill="currentColor" />
+    <circle cx="12" cy="11" r="2.200" fill="#0e131b" />
+  </svg>
+)
+export const REWARD_ICONS = { cup: CupIcon, leaf: LeafIcon, ticket: TicketIcon, rice: RiceIcon }

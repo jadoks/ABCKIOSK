@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { CATEGORY_ICONS, CheckIcon, MinusIcon, PlusIcon } from './icons.jsx'
 import { peso } from '../lib/format.js'
 
-const PLACEHOLDER_ICON = { rice: 'rice', sandwiches: 'sandwich', drinks: 'cup' }
+const PLACEHOLDER_ICON = { rice: 'rice', noodles: 'noodle', sandwiches: 'sandwich', snacks: 'snack', drinks: 'cup', desserts: 'dessert' }
 
 export default function MenuCard({ item, qty, onAdd, onChange, hidden = false }) {
   // photo (.jpg) -> illustrated fallback (.svg) -> icon
