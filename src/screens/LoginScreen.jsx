@@ -1,9 +1,9 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Frame from '../components/Frame.jsx'
 import AppHeader from '../components/Header.jsx'
 import Keypad from '../components/Keypad.jsx'
 import { WarningIcon, IdIcon, CheckIcon, ArrowIcon, UserPlusIcon } from '../components/icons.jsx'
-import { db } from '../lib/db.js'
+import { api, setToken } from '../lib/api.js'
 import { ID_LENGTH, PIN_LENGTH, MAX_ATTEMPTS } from '../lib/config.js'
 
 /* ---------- pieces ---------- */
@@ -27,16 +27,31 @@ export default function LoginScreen({ onSuccess, onRegister, onHelp }) {
   const [active, setActive] = useState('id') // which field the keypad types into: 'id' | 'pin'
   const [failed, setFailed] = useState(0)
   const [unregistered, setUnregistered] = useState(false)
+  const [busy, setBusy] = useState(false)
+  const [serverError, setServerError] = useState('') // network / server problems
+  const [lockedUntil, setLockedUntil] = useState(0) // ms timestamp from the server's lockout, 0 = not locked
+  const [lockSeconds, setLockSeconds] = useState(0)
   const idInput = useRef(null)
 
   const idComplete = idDigits.length === ID_LENGTH
 
-  const locked = failed >= MAX_ATTEMPTS
+  const locked = lockedUntil > 0
   const remaining = MAX_ATTEMPTS - failed
+
+  // The server owns the lockout. When its time is up, unlock the keypad again.
+  useEffect(() => {
+    if (!lockedUntil) return
+    const unlock = () => { setLockedUntil(0); setFailed(0) }
+    const ms = lockedUntil - Date.now()
+    if (ms <= 0) return unlock()
+    const t = setTimeout(unlock, ms)
+    return () => clearTimeout(t)
+  }, [lockedUntil])
 
   const press = (k) => {
     if (locked) return
     setUnregistered(false)
+    setServerError('')
 
     if (active === 'id') {
       if (k === 'clear') return setIdDigits('')
@@ -54,21 +69,40 @@ export default function LoginScreen({ onSuccess, onRegister, onHelp }) {
     setPin((p) => (p.length < PIN_LENGTH ? p + k : p))
   }
 
-  const login = () => {
-    if (locked) return
+  const login = async () => {
+    if (locked || busy) return
     if (!idComplete) return setActive('id')
     if (pin.length < PIN_LENGTH) return setActive('pin')
-    const result = db.verifyLogin(idDigits, pin) // swap for your real API call later
-    if (result.ok) return onSuccess?.({ id: idDigits, name: result.name })
-    setPin('')
-    if (result.reason === 'not-registered') return setUnregistered(true)
-    setFailed((f) => f + 1)
+    setBusy(true)
+    setServerError('')
+    try {
+      const res = await api.login(idDigits, pin)
+      setToken(res.token)
+      await onSuccess?.({ id: res.student.id, name: res.student.name, course: res.student.course, balance: res.balance, points: res.points })
+    } catch (e) {
+      setPin('')
+      if (e.code === 'not-registered') setUnregistered(true)
+      else if (e.code === 'wrong-pin') setFailed(MAX_ATTEMPTS - (e.body?.attemptsLeft ?? MAX_ATTEMPTS - 1))
+      else if (e.code === 'locked') {
+        const secs = Math.max(1, e.body?.retryAfterSeconds ?? 60)
+        setFailed(MAX_ATTEMPTS)
+        setLockSeconds(secs)
+        setLockedUntil(Date.now() + secs * 1000)
+      } else if (e.status === 0) setServerError('Cannot reach the kiosk server. Please ask staff for help.')
+      else if (e.status === 429) setServerError('Too many attempts. Please wait a moment and try again.')
+      else setServerError('Something went wrong. Please try again or ask staff for help.')
+    } finally {
+      setBusy(false)
+    }
   }
 
-  const notice = unregistered
+  const lockMinutes = Math.max(1, Math.ceil(lockSeconds / 60))
+  const notice = serverError
+    ? serverError
+    : unregistered
     ? 'This Student ID is not registered yet. Tap Register Account below.'
     : locked
-    ? 'Account locked after 5 failed attempts. Please ask staff for help.'
+    ? `Account locked for ${lockMinutes} minute${lockMinutes === 1 ? '' : 's'} after too many wrong PINs. Please try again later or ask staff for help.`
     : `Invalid PIN. ${remaining} attempt${remaining === 1 ? '' : 's'} remaining (Account locks after ${MAX_ATTEMPTS} failed attempts).`
 
   return (
@@ -84,7 +118,7 @@ export default function LoginScreen({ onSuccess, onRegister, onHelp }) {
 
         {/* Security notice (space reserved so the layout never jumps) */}
         <div className="mt-[50px] h-[88px]" role="alert" aria-live="polite">
-          {(failed > 0 || unregistered) && (
+          {(failed > 0 || unregistered || serverError) && (
             <div className="flex h-full items-center gap-4 rounded-2xl bg-danger px-[14px]">
               <span className="grid h-10 w-10 flex-none place-items-center rounded-[10px] bg-danger-icon"><WarningIcon /></span>
               <div>
@@ -145,10 +179,10 @@ export default function LoginScreen({ onSuccess, onRegister, onHelp }) {
         <button
           type="button"
           onClick={login}
-          disabled={locked}
+          disabled={locked || busy}
           className="mt-[58px] flex h-16 items-center justify-center gap-2 rounded-2xl bg-brand text-[22px] font-semibold text-[#06323f] shadow-[0_0_30px_rgba(68,212,247,0.3)] transition active:scale-[0.98] disabled:opacity-40"
         >
-          Log In <ArrowIcon />
+          {busy ? 'Logging in…' : <>Log In <ArrowIcon /></>}
         </button>
         <button
           type="button"

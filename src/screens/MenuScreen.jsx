@@ -5,9 +5,9 @@ import SessionBar from '../components/SessionBar.jsx'
 import MenuCard from '../components/MenuCard.jsx'
 import useDragScroll from '../hooks/useDragScroll.js'
 import { ArrowIcon, BagIcon, CATEGORY_ICONS, MedalIcon, SlidersIcon } from '../components/icons.jsx'
-import { CATEGORIES, ITEMS } from '../data/menu.js'
+import { CATEGORIES, ITEMS } from '../lib/menu.js'
 import { cartSummary } from '../lib/cart.js'
-import { db } from '../lib/db.js'
+import { useWallet } from '../lib/wallet.js'
 import { peso } from '../lib/format.js'
 
 const MAX_QTY = 9
@@ -36,6 +36,7 @@ function CategoryButton({ cat, count, active, onSelect }) {
 
 export default function MenuScreen({ student, cart, onCartChange, onLogOut, onCheckout, onOpenWallet }) {
   const [category, setCategory] = useState('all')
+  const { points } = useWallet()
   const listRef = useDragScroll() // drag the item list with a finger or mouse
 
   const pickCategory = (id) => {
@@ -73,7 +74,7 @@ export default function MenuScreen({ student, cart, onCartChange, onLogOut, onCh
           {/* Loyalty perks card */}
           <div className="mt-[30px] rounded-[16px] border border-[#5a4620] bg-[#161c27] p-[18px]">
             <p className="flex flex-wrap items-center gap-x-2 text-[13px] font-bold tracking-[0.04em] text-amber">
-              <MedalIcon /> LOYALTY PERKS <span className="text-[16px] font-semibold tracking-normal">Balance: {db.getPoints(student.id).toLocaleString()} Pts</span>
+              <MedalIcon /> LOYALTY PERKS <span className="text-[16px] font-semibold tracking-normal">Balance: {points.toLocaleString()} Pts</span>
             </p>
             <p className="mt-3 font-body text-[17px] leading-5 text-muted">Convert points to meal discount slips instantly.</p>
             <button

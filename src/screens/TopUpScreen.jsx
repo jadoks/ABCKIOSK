@@ -12,7 +12,8 @@ import {
   ACCEPTED_BILLS, ACCEPTED_COINS, QR_EXPIRY_SECONDS, SIMULATED_QR_SECONDS, SIMULATE_PAYMENTS,
   TOPUP_AMOUNTS, TOPUP_DEFAULT, TOPUP_MAX, TOPUP_MIN,
 } from '../lib/config.js'
-import { db } from '../lib/db.js'
+import { api } from '../lib/api.js'
+import { setWallet, useWallet } from '../lib/wallet.js'
 import { mmss, peso } from '../lib/format.js'
 
 const money = (n) => `₱${n.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
@@ -67,7 +68,7 @@ function SuccessModal({ amount, balance, onWallet, onMenu }) {
 
 /* ---------- stage 1: pick amount and method ---------- */
 function PickStage({ student, amount, custom, setAmount, setCustom, method, setMethod, onProceed, openKeypad }) {
-  const balance = db.getWalletBalance(student.id)
+  const { balance } = useWallet()
   return (
     <div className="absolute left-[104px] right-[82px] top-[322px] flex flex-col">
       <div className="text-center">
@@ -211,17 +212,32 @@ export default function TopUpScreen({ student, cart, onLogOut, onBackToMenu, onB
 
   const { inserted, settle, creditLeftover } = useCashSession(student.id, stage === 'cash')
 
-  const finish = (credited, how) => {
+  const [error, setError] = useState('')
+
+  // Asks the server to credit the wallet (simulation only: see PaymentsOptions on the API).
+  const finish = async (credited, how) => {
     if (finished.current) return
     finished.current = true
-    const balance = db.creditWallet(student.id, credited, { method: how })
-    setResult({ amount: credited, balance })
-    setStage('done')
+    setError('')
+    try {
+      const res = await api.topUp(credited, how)
+      setWallet(res) // new balance + points from the server
+      if (how === 'cash') settle() // cash is now used; don't credit it a second time on exit
+      setResult({ amount: credited, balance: res.balance })
+      setStage('done')
+    } catch (e) {
+      finished.current = false
+      setError(
+        e.status === 0 ? 'Cannot reach the kiosk server. Please try again or ask staff for help.'
+        : how === 'cash' ? 'Could not credit the wallet yet. Tap Cancel and your inserted cash will be credited.'
+        : 'Top-up could not be completed. Please try again.',
+      )
+      if (how === 'gcash') setStage('pick')
+    }
   }
 
   useEffect(() => {
     if (stage === 'cash' && inserted >= amount && inserted > 0) {
-      settle()
       finish(inserted, 'cash')
     }
   }, [stage, inserted, amount]) 
@@ -243,6 +259,8 @@ export default function TopUpScreen({ student, cart, onLogOut, onBackToMenu, onB
         student={student} cart={cart} onLogOut={onLogOut} idlePaused={waiting}
         actionLabel={inFlow ? 'Cancel' : 'Back to Menu'} onAction={inFlow ? cancel : onBackToMenu} ActionIcon={inFlow ? XIcon : ArrowLeftIcon}
       />
+
+      {error && <p className="absolute left-[104px] right-[82px] top-[286px] text-center text-[18px] font-medium text-[#ff9aa2]" role="alert">{error}</p>}
 
       {stage === 'pick' && (
         <PickStage

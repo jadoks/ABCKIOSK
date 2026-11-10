@@ -1,4 +1,4 @@
-import { ITEMS } from '../data/menu.js'
+import { ITEMS } from './menu.js'
 
 const keep = [] // hold references so the browser keeps the decoded images
 

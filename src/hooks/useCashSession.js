@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { cashAcceptor } from '../lib/cashAcceptor.js'
-import { db } from '../lib/db.js'
+import { api, getToken } from '../lib/api.js'
+import { refreshWallet } from '../lib/wallet.js'
 
 /*
  * Tracks cash inserted during one screen visit.
@@ -11,6 +12,7 @@ export default function useCashSession(studentId, active) {
   const [inserted, setInserted] = useState(0)
   const insertedRef = useRef(0)
   const settled = useRef(false)
+  const tokenRef = useRef(getToken()) // remembered so the credit still works if the session ends (auto log-out) at the same moment
 
   useEffect(() => {
     if (!active) return undefined
@@ -24,7 +26,9 @@ export default function useCashSession(studentId, active) {
   /** Credits unused cash to the wallet (no-op when nothing was inserted or the payment already finished). */
   const creditLeftover = useCallback(() => {
     if (!settled.current && insertedRef.current > 0) {
-      db.creditWallet(studentId, insertedRef.current, { method: 'cash', note: 'Unfinished payment, credited to wallet' })
+      api.topUp(insertedRef.current, 'cash', 'Unfinished payment, credited to wallet', { token: tokenRef.current })
+        .then(() => refreshWallet())
+        .catch(() => {})
     }
     insertedRef.current = 0
     setInserted(0)

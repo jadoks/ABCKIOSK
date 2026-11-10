@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Frame from '../components/Frame.jsx'
 import AppHeader from '../components/Header.jsx'
 import SessionBar from '../components/SessionBar.jsx'
 import { ArrowLeftIcon, CheckIcon, GiftIcon, MedalIcon, REWARD_ICONS, ReceiptIcon, TopUpIcon, TrophyIcon } from '../components/icons.jsx'
-import { db } from '../lib/db.js'
+import { api } from '../lib/api.js'
+import { refreshWallet, useWallet } from '../lib/wallet.js'
 import { peso } from '../lib/format.js'
 import { REWARDS, tierInfo } from '../lib/rewards.js'
 
@@ -55,24 +56,31 @@ function RedeemedModal({ result, onClose }) {
 }
 
 export default function WalletScreen({ student, cart, onLogOut, onBack, onTopUp, onHistory }) {
-  const [, force] = useState(0) // re-read balances after a redemption
   const [redeemed, setRedeemed] = useState(null)
   const [error, setError] = useState('')
+  const [busy, setBusy] = useState(false)
 
-  const balance = db.getWalletBalance(student.id)
-  const points = db.getPoints(student.id)
+  const { balance, points } = useWallet()
+  useEffect(() => { refreshWallet().catch(() => {}) }, []) // always show the latest numbers from the server
   const { tier, next, toNext, progress, top } = tierInfo(points)
 
-  const redeem = (reward) => {
+  const redeem = async (reward) => {
+    if (busy) return
     setError('')
-    const res = db.redeemReward(student.id, reward.id)
-    if (!res.ok) {
-      setError('Not enough points for that reward.')
-      force((n) => n + 1)
-      return
+    setBusy(true)
+    try {
+      const res = await api.redeem(reward.id)
+      setRedeemed(res) // { code, points, reward }
+    } catch (e) {
+      setError(
+        e.code === 'insufficient' ? 'Not enough points for that reward.'
+        : e.status === 0 ? 'Cannot reach the kiosk server. Please try again.'
+        : 'Could not redeem that reward. Please try again.',
+      )
+    } finally {
+      setBusy(false)
+      refreshWallet().catch(() => {})
     }
-    setRedeemed(res)
-    force((n) => n + 1)
   }
 
   return (

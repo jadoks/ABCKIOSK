@@ -1,4 +1,4 @@
-import { ITEMS } from '../data/menu.js'
+import { ITEMS } from './menu.js'
 
 /* cart = { [itemId]: quantity } -> { count, total, lines } */
 export function cartSummary(cart) {
@@ -17,9 +17,10 @@ export const ECO_FEE_PER_ITEM = 5 // pesos per item (packaging)
 export const SERVICE_FEE = 0 // kiosk fee, free for students
 
 /* Everything the cart / receipt shows: { count, subtotal, ecoFee, serviceFee, total } */
-export function orderTotals(lines) {
+/* Packaging fee applies to take-out only. Dine-in (or not yet chosen) = no fee. */
+export function orderTotals(lines, serviceType) {
   const count = lines.reduce((n, l) => n + l.qty, 0)
   const subtotal = lines.reduce((sum, l) => sum + l.qty * l.item.price, 0)
-  const ecoFee = count * ECO_FEE_PER_ITEM
+  const ecoFee = serviceType === 'take-out' ? count * ECO_FEE_PER_ITEM : 0
   return { count, subtotal, ecoFee, serviceFee: SERVICE_FEE, total: subtotal + ecoFee + SERVICE_FEE }
 }

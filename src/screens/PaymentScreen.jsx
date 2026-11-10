@@ -13,8 +13,18 @@ import useCashSession from '../hooks/useCashSession.js'
 import useCountdown from '../hooks/useCountdown.js'
 import { cartSummary, orderTotals } from '../lib/cart.js'
 import { ACCEPTED_BILLS, ACCEPTED_COINS, QR_EXPIRY_SECONDS, SERVICE_TYPES, SIMULATED_QR_SECONDS, SIMULATE_PAYMENTS } from '../lib/config.js'
-import { db } from '../lib/db.js'
+import { api } from '../lib/api.js'
+import { refreshWallet, useWallet } from '../lib/wallet.js'
 import { mmss, peso } from '../lib/format.js'
+
+const REASON_TEXT = {
+  insufficient: 'Wallet balance is too low. Please choose another payment method.',
+  network: 'Cannot reach the kiosk server. Please try again or ask staff for help.',
+  conflict: 'Your wallet was just updated. Please try again.',
+  unavailable: 'An item in your cart is no longer available. Please go back and update your order.',
+  'not-configured': 'This payment method is not available yet. Please use your Campus Wallet.',
+  failed: 'Payment could not be completed. Please try again.',
+}
 
 const PROCESSING_MS = 900
 const CASH_DONE_MS = 1400 
@@ -251,9 +261,9 @@ function QrScanStage({ ticket, total, count, serviceLabel, seedKey, provider, on
 /* ---------- screen ---------- */
 export default function PaymentScreen({ student, cart, serviceType, onBackToCart, onBackToMenu, onLogOut, onPay }) {
   const { lines } = cartSummary(cart)
-  const totals = orderTotals(lines)
+  const totals = orderTotals(lines, serviceType)
   const { total } = totals
-  const balance = db.getWalletBalance(student.id)
+  const { balance } = useWallet()
   const enough = balance >= total
 
   const ticket = useMemo(() => `T-${1000 + Math.floor(Math.random() * 9000)}`, [])
@@ -270,12 +280,14 @@ export default function PaymentScreen({ student, cart, serviceType, onBackToCart
   useEffect(() => {
     if (method !== 'cash' || cashPaid.current || total <= 0 || inserted < total) return
     cashPaid.current = true
-    timer.current = setTimeout(() => {
+    timer.current = setTimeout(async () => {
       settle() 
-      const result = onPay('cash', ticket, { tendered: inserted, change: inserted - total })
+      const result = await onPay('cash', ticket, { tendered: inserted, change: inserted - total })
       if (result && !result.ok) {
         cashPaid.current = false
-        setError('Payment could not be completed. Your cash was credited to your wallet.')
+        // The machine already took the cash, so put it on the student's wallet.
+        api.topUp(inserted, 'cash', 'Payment failed, credited to wallet').then(() => refreshWallet()).catch(() => {})
+        setError('Payment could not be completed. Your cash was credited to your wallet.' + (import.meta.env.DEV && result.detail ? ` [${result.detail}]` : ''))
       }
     }, CASH_DONE_MS)
   }, [method, inserted, total]) 
@@ -286,11 +298,11 @@ export default function PaymentScreen({ student, cart, serviceType, onBackToCart
     if (busy) return
     setError('')
     setBusy(true)
-    timer.current = setTimeout(() => {
-      const result = onPay(m, ticket)
+    timer.current = setTimeout(async () => {
+      const result = await onPay(m, ticket)
       if (result && !result.ok) {
         setBusy(false)
-        setError(result.reason === 'insufficient' ? 'Wallet balance is too low. Please choose another payment method.' : 'Payment could not be completed. Please try again.')
+        setError((REASON_TEXT[result.reason] ?? REASON_TEXT.failed) + (import.meta.env.DEV && result.detail ? ` [${result.detail}]` : ''))
       }
     }, PROCESSING_MS)
   }

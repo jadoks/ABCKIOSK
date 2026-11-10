@@ -1,10 +1,11 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Frame from '../components/Frame.jsx'
 import AppHeader from '../components/Header.jsx'
 import SessionBar from '../components/SessionBar.jsx'
 import { ArrowDownIcon, CashIcon, DineInIcon, GiftIcon, SandwichIcon, TakeOutIcon, TopUpIcon, WalletIcon, XIcon } from '../components/icons.jsx'
 import { SEMESTER_LABEL, TRANSACTIONS_PAGE_SIZE } from '../lib/config.js'
-import { db } from '../lib/db.js'
+import { api } from '../lib/api.js'
+import { refreshWallet, useWallet } from '../lib/wallet.js'
 import { clock, peso } from '../lib/format.js'
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
@@ -43,8 +44,20 @@ function Row({ t }) {
 }
 
 export default function TransactionsScreen({ student, cart, onLogOut, onBack }) {
-  const all = db.transactions(student.id)
+  const [all, setAll] = useState([])
+  const [loading, setLoading] = useState(true)
+  const { balance } = useWallet()
   const [shown, setShown] = useState(TRANSACTIONS_PAGE_SIZE)
+
+  useEffect(() => {
+    let cancelled = false
+    refreshWallet().catch(() => {})
+    api.transactions(100)
+      .then((r) => { if (!cancelled) setAll(r.items) })
+      .catch(() => {})
+      .finally(() => { if (!cancelled) setLoading(false) })
+    return () => { cancelled = true }
+  }, [])
   const rows = all.slice(0, shown)
 
   return (
@@ -60,10 +73,12 @@ export default function TransactionsScreen({ student, cart, onLogOut, onBack }) 
 
         <div className="mx-auto mt-6 flex h-[102px] w-[672px] items-center justify-between rounded-[16px] bg-[#161c27] px-8">
           <span className="flex items-center gap-4 text-[26px] font-medium text-soft"><WalletIcon className="h-7 w-7" /> Available Balance:</span>
-          <span className="text-[38px] font-bold text-brand">{peso(db.getWalletBalance(student.id))}</span>
+          <span className="text-[38px] font-bold text-brand">{peso(balance)}</span>
         </div>
 
-        {rows.length === 0 ? (
+        {loading ? (
+          <div className="mt-[70px] h-[200px]" aria-busy="true" />
+        ) : rows.length === 0 ? (
           <div className="mt-[70px] grid h-[200px] place-items-center rounded-[14px] bg-[#161c27] text-center">
             <div>
               <p className="text-[28px] font-semibold">No transactions yet</p>

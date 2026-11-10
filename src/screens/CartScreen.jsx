@@ -80,10 +80,10 @@ function SummaryRow({ label, children }) {
 /* ---------- screen ---------- */
 export default function CartScreen({ student, cart, serviceType: initialType = null, onCartChange, onBack, onLogOut, onProceed }) {
   const { lines } = cartSummary(cart)
-  const { count, subtotal, ecoFee, serviceFee, total } = orderTotals(lines)
   const listRef = useDragScroll()
 
   const [serviceType, setServiceType] = useState(initialType) // 'dine-in' | 'take-out' | null (must be chosen)
+  const { count, subtotal, ecoFee, serviceFee, total } = orderTotals(lines, serviceType)
 
   const setQty = (id, qty) => {
     const next = { ...cart }
@@ -155,7 +155,9 @@ export default function CartScreen({ student, cart, serviceType: initialType = n
           {/* Totals */}
           <section className="rounded-[16px] bg-[#161c27] px-5 py-4" aria-label="Order totals">
             <SummaryRow label={`Items Subtotal (${count} ${count === 1 ? 'item' : 'items'})`}>{peso(subtotal)}</SummaryRow>
-            <SummaryRow label={`Eco-Packaging Fee (${peso(ECO_FEE_PER_ITEM)}/item)`}>{peso(ecoFee)}</SummaryRow>
+            <SummaryRow label={serviceType === 'take-out' ? `Eco-Packaging Fee (${peso(ECO_FEE_PER_ITEM)}/item)` : 'Eco-Packaging Fee'}>
+              {serviceType === 'take-out' ? peso(ecoFee) : <span className="text-mint">{peso(0)} (Dine In)</span>}
+            </SummaryRow>
             <div className="flex h-[48px] items-center justify-between">
               <span className="font-body text-[18px] text-muted">Kiosk System Service Fee</span>
               <span className="flex items-center gap-2 text-[21px] font-semibold text-mint">

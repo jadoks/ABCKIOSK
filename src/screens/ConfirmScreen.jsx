@@ -39,7 +39,7 @@ function ClaimSlip({ order, student }) {
       {order.lines.map((l) => (
         <p key={l.id} className="row"><span>{l.qty} x {l.name}</span><span>{peso(l.price * l.qty)}</span></p>
       ))}
-      <p className="row"><span>Eco-packaging</span><span>{peso(order.ecoFee)}</span></p>
+      {order.ecoFee > 0 && <p className="row"><span>Eco-packaging</span><span>{peso(order.ecoFee)}</span></p>}
       <p className="row b"><span>TOTAL</span><span>{peso(order.total)}</span></p>
       <hr />
       <p className="row"><span>Method</span><span>{METHOD_LABEL[order.paymentMethod]}</span></p>

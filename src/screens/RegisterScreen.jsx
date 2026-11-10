@@ -1,9 +1,9 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Frame from '../components/Frame.jsx'
 import AppHeader from '../components/Header.jsx'
 import Keypad from '../components/Keypad.jsx'
 import { IdIcon, UserIcon, LockIcon, CheckIcon, ArrowIcon, ArrowLeftIcon } from '../components/icons.jsx'
-import { db } from '../lib/db.js'
+import { api, setToken } from '../lib/api.js'
 import { ID_LENGTH, PIN_LENGTH } from '../lib/config.js'
 
 const labelCls = 'text-[12px] font-semibold leading-4 tracking-[0.08em] text-muted'
@@ -53,9 +53,27 @@ export default function RegisterScreen({ onRegistered, onBackToLogin, onHelp }) 
 
   /* ----- derived state ----- */
   const idComplete = idDigits.length === ID_LENGTH
-  const name = idComplete ? db.lookupRegistrar(idDigits) : null
-  const alreadyRegistered = idComplete && !!name && db.isRegistered(idDigits)
-  const idState = !idComplete ? 'incomplete' : !name ? 'not-found' : alreadyRegistered ? 'registered' : 'verified'
+  const [busy, setBusy] = useState(false)
+  const [lookup, setLookup] = useState(null) // { id, status: 'checking' | 'verified' | 'registered' | 'not-found' | 'error', name? }
+
+  // Ask the server who owns this ID as soon as all 7 digits are typed.
+  useEffect(() => {
+    if (idDigits.length !== ID_LENGTH) return
+    let cancelled = false
+    setLookup({ id: idDigits, status: 'checking' })
+    api.lookupRegistrar(idDigits)
+      .then((r) => {
+        if (cancelled) return
+        setLookup({ id: idDigits, status: r.registered ? 'registered' : 'verified', name: r.name })
+        if (!r.registered) setActive((a) => (a === 'id' ? 'create' : a)) // jump to the PIN once the ID is valid
+      })
+      .catch((e) => !cancelled && setLookup({ id: idDigits, status: e.status === 404 ? 'not-found' : 'error' }))
+    return () => { cancelled = true }
+  }, [idDigits])
+
+  const current = idComplete && lookup?.id === idDigits ? lookup : null
+  const name = current?.name ?? null
+  const idState = !idComplete ? 'incomplete' : !current ? 'checking' : current.status
 
   const pinsMatch = create.length === PIN_LENGTH && confirm === create
   const pinsMismatch = confirm.length === PIN_LENGTH && confirm !== create
@@ -69,8 +87,6 @@ export default function RegisterScreen({ onRegistered, onBackToLogin, onHelp }) 
       if (idDigits.length < ID_LENGTH) {
         const next = idDigits + k
         setIdDigits(next)
-        // jump to the PIN only when the registrar knows this ID and it has no account yet
-        if (next.length === ID_LENGTH && db.lookupRegistrar(next) && !db.isRegistered(next)) setActive('create')
       }
       return
     }
@@ -92,8 +108,11 @@ export default function RegisterScreen({ onRegistered, onBackToLogin, onHelp }) 
     setActive(field)
   }
 
-  const submit = () => {
+  const submit = async () => {
+    if (busy) return
     if (!idComplete) return fail(`Enter your ${ID_LENGTH}-digit Student ID first.`, 'id')
+    if (idState === 'checking') return fail('Checking your Student ID. Please wait a moment.', 'id')
+    if (idState === 'error') return fail('Cannot reach the kiosk server. Please ask staff for help.', 'id')
     if (idState === 'not-found') return fail('Student ID not found. Check your number or ask staff for help.', 'id')
     if (idState === 'registered') return fail('This Student ID already has an account. Tap Back to Log In.', 'id')
     if (create.length < PIN_LENGTH) return fail(`Create a ${PIN_LENGTH}-digit PIN.`, 'create')
@@ -102,9 +121,25 @@ export default function RegisterScreen({ onRegistered, onBackToLogin, onHelp }) 
       setConfirm('')
       return fail("PINs don't match. Enter the confirm PIN again.", 'confirm')
     }
-    const result = db.register(idDigits, create) // swap for your real API call later
-    if (result.ok) return onRegistered?.({ id: idDigits, name: result.name })
-    fail('Registration failed. Please try again or ask staff for help.', 'id')
+    setBusy(true)
+    try {
+      await api.register(idDigits, create)
+    } catch (e) {
+      setBusy(false)
+      if (e.code === 'already-registered') return fail('This Student ID already has an account. Tap Back to Log In.', 'id')
+      if (e.code === 'not-found') return fail('Student ID not found. Check your number or ask staff for help.', 'id')
+      if (e.status === 0) return fail('Cannot reach the kiosk server. Please ask staff for help.', 'id')
+      return fail('Registration failed. Please try again or ask staff for help.', 'id')
+    }
+    // Account created: log in straight away with the same ID + PIN.
+    try {
+      const res = await api.login(idDigits, create)
+      setToken(res.token)
+      await onRegistered?.({ id: res.student.id, name: res.student.name, course: res.student.course, balance: res.balance, points: res.points })
+    } catch {
+      setBusy(false)
+      onBackToLogin?.() // account exists now, so the student can simply log in
+    }
   }
 
   /* ----- ID badge ----- */
@@ -119,6 +154,10 @@ export default function RegisterScreen({ onRegistered, onBackToLogin, onHelp }) 
     idBadge = <span className={`${badgeCls} bg-amber/15 text-amber`}>ALREADY REGISTERED</span>
   else if (idState === 'not-found')
     idBadge = <span className={`${badgeCls} bg-danger-icon text-white`}>ID NOT FOUND</span>
+  else if (idState === 'checking')
+    idBadge = <span className={`${badgeCls} bg-amber/15 text-amber`}>CHECKING…</span>
+  else if (idState === 'error')
+    idBadge = <span className={`${badgeCls} bg-danger-icon text-white`}>SERVER OFFLINE</span>
   else
     idBadge = (
       <span className={`${badgeCls} bg-amber/15 text-amber`}>
@@ -203,9 +242,10 @@ export default function RegisterScreen({ onRegistered, onBackToLogin, onHelp }) 
         <button
           type="button"
           onClick={submit}
-          className="mt-6 flex h-16 items-center justify-center gap-3 rounded-2xl bg-brand text-[28px] font-semibold text-[#06323f] shadow-[0_0_30px_rgba(68,212,247,0.3)] transition active:scale-[0.98]"
+          disabled={busy}
+          className="mt-6 flex h-16 items-center justify-center gap-3 rounded-2xl bg-brand text-[28px] font-semibold text-[#06323f] shadow-[0_0_30px_rgba(68,212,247,0.3)] transition active:scale-[0.98] disabled:opacity-40"
         >
-          Complete Registration &amp; Log In <ArrowIcon />
+          {busy ? 'Creating account…' : <>Complete Registration &amp; Log In <ArrowIcon /></>}
         </button>
         <button
           type="button"
