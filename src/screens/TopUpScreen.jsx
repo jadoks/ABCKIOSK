@@ -126,12 +126,11 @@ function PickStage({ student, amount, custom, setAmount, setCustom, method, setM
 /* ---------- stage 2a: QR Ph ---------- */
 function QrStage({ student, amount, onPaid }) {
   const paid = useRef(onPaid)
-  paid.current = onPaid // keep the demo timer from restarting on every parent render
+  paid.current = onPaid 
   const [qrKey, setQrKey] = useState(0)
   const left = useCountdown(QR_EXPIRY_SECONDS, true, qrKey)
   const expired = left <= 0
 
-  // DEMO: pretend the payment arrives. In production the server tells us the payment cleared.
   useEffect(() => {
     if (!SIMULATE_PAYMENTS || expired) return undefined
     const t = setTimeout(() => paid.current(), SIMULATED_QR_SECONDS * 1000)
@@ -142,7 +141,7 @@ function QrStage({ student, amount, onPaid }) {
     <div className="absolute inset-x-0 top-[262px] flex flex-col items-center">
       <p className="flex h-[40px] items-center gap-3 rounded-full bg-[#161c27] px-6 text-[18px] font-semibold tracking-[0.06em] text-brand"><QrIcon className="h-5 w-5 !text-brand" /> NATIONAL QR PAYMENT RAIL</p>
       <h1 className="mt-5 text-[44px] font-bold leading-[52px]">Scan to Pay via GCash / QR Ph</h1>
-      <p className="mt-2 max-w-[620px] text-center font-body text-[24px] leading-8 text-[#9aa4b8]">Open GCash, Maya, or any QR Ph enabled banking app to complete your student balance top-up.</p>
+      <p className="mt-2 max-w-[620px] text-center font-body text-[24px] leading-8 text-[#9aa4b8]">Open GCash, Maya, or MariBank to complete your student balance top-up.</p>
 
       <div className="relative mt-6 grid h-[514px] w-[514px] place-items-center rounded-[40px] bg-white">
         <QrPlaceholder seed={`topup-${student.id}-${amount}-${qrKey}`} className="h-[390px] w-[390px] flex-none">
@@ -207,7 +206,7 @@ export default function TopUpScreen({ student, cart, onLogOut, onBackToMenu, onB
   const [custom, setCustom] = useState(false)
   const [keypad, setKeypad] = useState(false)
   const [method, setMethod] = useState('gcash')
-  const [result, setResult] = useState(null) // { amount, balance } after a successful top-up
+  const [result, setResult] = useState(null) 
   const finished = useRef(false)
 
   const { inserted, settle, creditLeftover } = useCashSession(student.id, stage === 'cash')
@@ -220,18 +219,17 @@ export default function TopUpScreen({ student, cart, onLogOut, onBackToMenu, onB
     setStage('done')
   }
 
-  // cash: done as soon as the target is reached; the full amount inserted is credited (no change on top-ups)
   useEffect(() => {
     if (stage === 'cash' && inserted >= amount && inserted > 0) {
       settle()
       finish(inserted, 'cash')
     }
-  }, [stage, inserted, amount]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [stage, inserted, amount]) 
 
   const paidByQr = () => finish(amount, 'gcash')
 
   const cancel = () => {
-    creditLeftover() // cash already inserted goes to the wallet instead of being lost
+    creditLeftover() 
     setStage('pick')
   }
 

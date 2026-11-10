@@ -16,19 +16,18 @@ import { ACCEPTED_BILLS, ACCEPTED_COINS, QR_EXPIRY_SECONDS, SERVICE_TYPES, SIMUL
 import { db } from '../lib/db.js'
 import { mmss, peso } from '../lib/format.js'
 
-const PROCESSING_MS = 900 // pretend the wallet / bank is answering
-const CASH_DONE_MS = 1400 // let the student see the final amount before the receipt
-const PROVIDERS = ['GCash', 'Maya', 'ShopeePay', 'BDO Pay', 'BPI Mobile']
-// Apps the student can choose to pay with (shown on the "choose your bank / e-wallet" step before the QR is generated)
+const PROCESSING_MS = 900
+const CASH_DONE_MS = 1400 
+const PROVIDERS = ['GCash', 'Maya', 'ShopeePay', 'MariBank']
+
 const PAY_APPS = [
-  { id: 'GCash', kind: 'E-Wallet', color: '#5fb4ff' },
-  { id: 'Maya', kind: 'E-Wallet', color: '#3ddc97' },
-  { id: 'ShopeePay', kind: 'E-Wallet', color: '#ff9a62' },
-  { id: 'BPI', kind: 'Mobile Banking', color: '#ff8a96' },
-  { id: 'BDO Pay', kind: 'Mobile Banking', color: '#6ea8ff' },
-  { id: 'Other Bank', kind: 'Any QR Ph bank app', color: '#c4b5fd' },
+  { id: 'GCash', kind: 'E-Wallet', letter: 'G', color: '#38bdf8' },
+  { id: 'Maya', kind: 'E-Wallet', letter: 'M', color: '#4ade80' },
+  { id: 'ShopeePay', kind: 'E-Wallet', letter: 'S', color: '#fb923c' },
+  { id: 'MariBank', kind: 'Digital Bank', letter: 'M', color: '#facc15' }
 ]
-const providerTone = { GCash: 'text-[#5fb4ff]', Maya: 'text-mint', ShopeePay: 'text-[#ff9a62]', 'BDO Pay': 'text-[#ff8a96]', 'BPI Mobile': 'text-[#ff8a96]' }
+
+const providerTone = { GCash: 'text-[#38bdf8]', Maya: 'text-[#4ade80]', ShopeePay: 'text-[#fb923c]', MariBank: 'text-[#facc15]' }
 const list = (a) => a.map((v) => `₱${v.toLocaleString()}`).join(', ')
 
 /* ---------- payment method card ---------- */
@@ -58,7 +57,7 @@ function MethodCard({ active, disabled, Icon, title, badge, badgeTone, subtitle,
   )
 }
 
-/* ---------- detail panel under the cards (fixed height so the buttons never jump) ---------- */
+/* ---------- detail panel under the cards ---------- */
 function PanelShell({ icon, title, ticket, children, bare = false }) {
   return (
     <section className={`h-[430px] overflow-hidden rounded-[16px] px-5 pb-3 pt-5 ${bare ? '' : 'border border-brand/70 bg-[#161c27]'}`} aria-live="polite">
@@ -157,13 +156,21 @@ function BankSelectStage({ ticket, total, count, serviceLabel, onSelect, onCance
       <div role="radiogroup" aria-label="Bank or e-wallet" className="mt-5 grid w-full grid-cols-2 gap-4">
         {PAY_APPS.map((a) => (
           <button key={a.id} type="button" role="radio" aria-checked="false" onClick={() => onSelect(a.id)}
-            className="flex h-[130px] items-center gap-4 rounded-[16px] border border-[#2b3342] bg-[#161c27] px-5 text-left transition active:scale-[0.98] active:border-brand">
-            <span className="grid h-[72px] w-[72px] flex-none place-items-center rounded-[14px] bg-key text-[34px] font-bold" style={{ color: a.color }}>{a.id[0]}</span>
-            <span className="min-w-0 flex-1">
-              <span className="block truncate text-[28px] font-semibold leading-8" style={{ color: a.color }}>{a.id}</span>
-              <span className="block font-body text-[18px] leading-6 text-muted">{a.kind}</span>
-            </span>
-            <span className="text-muted"><ChevronRightIcon /></span>
+            className="flex items-center w-full p-4 bg-[#141b2d] hover:bg-[#1a243a] border border-[#1e293b] rounded-2xl transition-all duration-200 text-left group active:scale-[0.98] active:border-brand">
+            <div className="w-12 h-12 rounded-xl bg-[#1e293b] flex items-center justify-center font-bold text-xl flex-shrink-0">
+              <span style={{ color: a.color }}>{a.letter}</span>
+            </div>
+            <div className="ml-4 flex-1">
+              <div className="font-semibold text-[22px] tracking-wide" style={{ color: a.color }}>
+                {a.id}
+              </div>
+              <div className="text-gray-400 text-[16px] mt-0.5">
+                {a.kind}
+              </div>
+            </div>
+            <div className="text-gray-500 group-hover:text-gray-300 transition-colors pl-2">
+              <ChevronRightIcon />
+            </div>
           </button>
         ))}
       </div>
@@ -176,15 +183,14 @@ function BankSelectStage({ ticket, total, count, serviceLabel, onSelect, onCance
   )
 }
 
-/* ---------- QR Ph scan screen (replaces the options after "Generate QR Code") ---------- */
+/* ---------- QR Ph scan screen ---------- */
 function QrScanStage({ ticket, total, count, serviceLabel, seedKey, provider, onChangeProvider, onPaid, onCancel }) {
   const paid = useRef(onPaid)
-  paid.current = onPaid // keep the demo timer from restarting on every parent render
+  paid.current = onPaid
   const [qrKey, setQrKey] = useState(0)
   const left = useCountdown(QR_EXPIRY_SECONDS, true, qrKey)
   const expired = left <= 0
 
-  // DEMO: pretend the payment arrives. In production the server tells us the payment cleared.
   useEffect(() => {
     if (!SIMULATE_PAYMENTS || expired) return undefined
     const t = setTimeout(() => paid.current(), SIMULATED_QR_SECONDS * 1000)
@@ -198,7 +204,7 @@ function QrScanStage({ ticket, total, count, serviceLabel, seedKey, provider, on
         <span className="h-[12px] w-[12px] rounded-full bg-brand" /> Ticket #{ticket} <span className="text-muted">•</span> <span className="text-brand">{serviceLabel}</span> <span className="text-muted">•</span> <span className="text-muted">{count} {count === 1 ? 'item' : 'items'}</span>
       </p>
       <h1 className="mt-4 text-[40px] font-bold leading-[46px]">Scan with {provider}</h1>
-      <p className="mt-1 max-w-[560px] text-center font-body text-[22px] leading-7 text-[#9aa4b8]">Open {provider === 'Other Bank' ? 'your banking app' : `your ${provider} app`} and scan the national QR Ph code below</p>
+      <p className="mt-1 max-w-[560px] text-center font-body text-[22px] leading-7 text-[#9aa4b8]">Open your {provider} app and scan the national QR Ph code below</p>
 
       <div className="relative mt-5 h-[468px] w-[444px]">
         <span className={`${corner} left-0 top-0 rounded-tl-[4px] border-l-[4px] border-t-[4px]`} />
@@ -252,29 +258,29 @@ export default function PaymentScreen({ student, cart, serviceType, onBackToCart
 
   const ticket = useMemo(() => `T-${1000 + Math.floor(Math.random() * 9000)}`, [])
   const [method, setMethod] = useState(enough ? 'wallet' : 'gcash')
-  const [stage, setStage] = useState('choose') // choose | bank | qr
-  const [provider, setProvider] = useState(null) // bank / e-wallet picked before the QR is shown
+  const [stage, setStage] = useState('choose') 
+  const [provider, setProvider] = useState(null) 
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const timer = useRef(null)
   useEffect(() => () => clearTimeout(timer.current), [])
 
-  /* Cash goes through the hardware validator; it is live as soon as "Pay Cash" is selected. */
   const { inserted, settle } = useCashSession(student.id, method === 'cash' && stage === 'choose')
   const cashPaid = useRef(false)
   useEffect(() => {
     if (method !== 'cash' || cashPaid.current || total <= 0 || inserted < total) return
     cashPaid.current = true
     timer.current = setTimeout(() => {
-      settle() // from here on the cash belongs to this order (leaving earlier credits it to the wallet instead)
+      settle() 
       const result = onPay('cash', ticket, { tendered: inserted, change: inserted - total })
       if (result && !result.ok) {
         cashPaid.current = false
         setError('Payment could not be completed. Your cash was credited to your wallet.')
       }
     }, CASH_DONE_MS)
-  }, [method, inserted, total]) // eslint-disable-line react-hooks/exhaustive-deps
-  const cashLocked = method === 'cash' && inserted > 0 // can't switch away once money is in the machine
+  }, [method, inserted, total]) 
+  
+  const cashLocked = method === 'cash' && inserted > 0 
 
   const pay = (m = method) => {
     if (busy) return
@@ -340,7 +346,7 @@ export default function PaymentScreen({ student, cart, serviceType, onBackToCart
               <MethodCard
                 active={method === 'gcash'} Icon={QrIcon} disabled={cashLocked} onSelect={() => setMethod('gcash')}
                 title="GCash / QR Ph" badge="MOBILE PAY"
-                subtitle="Scan screen QR using GCash, Maya, or mobile banking apps"
+                subtitle="Scan screen QR using GCash, Maya, or MariBank"
               />
               <MethodCard
                 active={method === 'cash'} Icon={CashIcon} onSelect={() => setMethod('cash')}
